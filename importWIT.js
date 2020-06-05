@@ -56,42 +56,48 @@ function createIssue( title, workitem_type, state, description, assignee ) {
 }
 
 //-----------------------------------------------------------------
-fs.readFile('wit.csv', function(err, charBuffer) {
-    var fileContents = charBuffer.toString();
-    var lines = fileContents.split('\n');
-    // The first line is the server name, so skip it
-    // The second line is column headers (skipped)
-    var headers = lines[1].split(',');
+try {
+    fs.readFile('wit.csv', function(err, charBuffer) {
+        if (err) { throw err }
+        var fileContents = charBuffer.toString();
+        var lines = fileContents.split('\n');
+        // The first line is the server name, so skip it
+        // The second line is column headers (skipped)
+        var headers = lines[1].split(',');
 
-    // We are capturing all of it as historical in the description
-    for( var i=2; i< lines.length; i++ ) {
-        var id, workitem_type, title, user, state;
-        var description = "*MIGRATED FROM WORK ITEM:*\n\n";
-        var columns = lines[i].split(',');
+        // We are capturing all of it as historical in the description
+        for( var i=2; i< lines.length; i++ ) {
+            var id, workitem_type, title, user, state;
+            var description = "*MIGRATED FROM WORK ITEM:*\n\n";
+            var columns = lines[i].split(',');
 
-        for( var j=0; j<columns.length; j++) {
-            switch (headers[j]) {
-                case 'ID':
-                    id = columns[j];
-                break;
-                case 'Work Item Type':
-                    workitem_type = columns[j];
-                break;
-                case 'Title':
-                    title = columns[j];
-                break;
-                case 'Assigned To':
-                    user = columns[j];
-                break;
-                case 'State':
-                    state = columns[j];
-                break;
+            for( var j=0; j<columns.length; j++) {
+                switch (headers[j]) {
+                    case 'ID':
+                        id = columns[j];
+                    break;
+                    case 'Work Item Type':
+                        workitem_type = columns[j];
+                    break;
+                    case 'Title':
+                        title = columns[j];
+                    break;
+                    case 'Assigned To':
+                        user = columns[j];
+                    break;
+                    case 'State':
+                        state = columns[j];
+                    break;
+                }
+                description += `- *${headers[j]}:* ${columns[j]}\n`
             }
-            description += `- *${headers[j]}:* ${columns[j]}\n`
-        }
 
-        if (id > 0 ) {
-            createIssue( title, workitem_type, state, description, user );
+            if (id > 0 ) {
+                createIssue( title, workitem_type, state, description, user );
+            }
         }
-    }
+    } catch (err) {
+        // File not found
+        console.error(err)
+    }            
 });
